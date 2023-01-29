@@ -1,2 +1,2 @@
-[default.databases.notes]
-url = "postgres://postgres:password@localhost:5432/notes"
+[default.databases.posts]
+url = "postgres://postgres:password@localhost:5432/posts"
