@@ -1,4 +1,4 @@
-use rocket::{serde::{json::Json}, http::Status, response::{Responder, self}, Request};
+use rocket::{serde::{json::Json}, http::{Status, Header}, response::{Responder, self}, Request, fairing::{Fairing, Info, Kind}, Response};
 use rocket_db_pools::{Database, Connection};
 
 use rust_rest::posts::Post;
@@ -166,6 +166,7 @@ async fn dislike_reply(reply_id: Json<ReplyId>, post_id: i64, mut db: Connection
     Ok(Json(liked_reply))
 }
 
+// HOMEPAGE API
 #[get("/latest")]
 async fn get_latest(mut db: Connection<PostsDatabase>) -> Result<Json<Vec<Post>>, DatabaseError> {
     let latest_posts = sqlx::query_as::<_, Post>("SELECT * FROM posts ORDER BY post_date DESC LIMIT 50")
@@ -175,12 +176,43 @@ async fn get_latest(mut db: Connection<PostsDatabase>) -> Result<Json<Vec<Post>>
     Ok(Json(latest_posts))
 }
 
+// CORS PREFLIGHT RESPONSE
+#[options("/deletepost")]
+async fn preflight_delete() -> Status {
+    Status::new(204)
+}
+
+#[options("/editpost")]
+async fn preflight_edit() -> Status {
+    Status::new(204)
+}
+
+struct CORS;
+#[rocket::async_trait]
+impl Fairing for CORS {
+    fn info(&self) -> Info {
+        Info {
+            name: "Add CORS headers to responses",
+            kind: Kind::Response
+        }
+    }
+
+    async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) -> () {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
     .attach(PostsDatabase::init())
+    .attach(CORS)
     .mount("/", routes![index, create_post, get_all_posts, edit_post, delete_post])
     .mount("/", routes![create_reply, get_replies, edit_reply, delete_reply])
     .mount("/", routes![like_post, dislike_post, like_reply, dislike_reply])
     .mount("/", routes![get_latest])
+    .mount("/", routes![preflight_edit, preflight_delete])
 }
