@@ -1,0 +1,51 @@
+name: chirper
+services:
+  client:
+    build:
+      context: ../client
+      target: dev-envs
+    networks:
+      - client-side
+    ports:
+      - 3000:3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  server:
+    build:
+      context: ../server
+      target: dev-envs
+    environment:
+      - RUST_LOG=debug
+      - PG_DBNAME=docker
+      - PG_HOST=docker
+      - PG_USER=docker
+      - PG_PASSWORD=docker
+      - ADDRESS=0.0.0.0:8000
+    networks:
+      - client-side
+      - server-side
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=docker
+    networks:
+      - server-side
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+networks:
+  client-side: {}
+  server-side: {}
+
+volumes:
+  server-cache: {}
+  db-data: {}
