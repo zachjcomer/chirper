@@ -1,33 +1,33 @@
-name: chirper
+name: react-rust-postgres
 services:
-  client:
+  frontend:
     build:
-      context: client
-      target: dev
+      context: frontend
+      target: development
     networks:
       - client-side
     ports:
       - 3000:3000
     volumes:
-      - ./client/src:/code/src:ro
-  
-  server:
+      - ./frontend/src:/code/src:ro
+
+  backend:
     build:
-      context: build
-      target: dev
+      context: backend
+      target: development
     environment:
       - ADDRESS=0.0.0.0:8000
       - RUST_LOG=debug
-      - PG_DBNAME=docker
-      - PG_HOST=docker
-      - PG_USER=docker
-      - PG_PASSWORD=docker
+      - PG_DBNAME=postgres
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=mysecretpassword
     networks:
       - client-side
       - server-side
     volumes:
-      - ./server/src:/code/src
-      - server-cache:/code/target
+      - ./backend/src:/code/src
+      - backend-cache:/code/target
     depends_on:
       - db
 
@@ -35,18 +35,19 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      - POSTGRES_PASSWORD=docker
+      - POSTGRES_PASSWORD=mysecretpassword
     networks:
       - server-side
     ports:
       - 5432:5432
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
 networks:
   client-side: {}
   server-side: {}
 
 volumes:
-  server-cache: {}
+  backend-cache: {}
   db-data: {}

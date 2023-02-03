@@ -15,7 +15,7 @@ use rust_rest::posts::ReplyId;
 extern crate rocket;
 
 #[derive(Database)]
-#[database("posts")]
+#[database("postgres")]
 struct PostsDatabase(sqlx::PgPool);
 
 struct DatabaseError(rocket_db_pools::sqlx::Error);

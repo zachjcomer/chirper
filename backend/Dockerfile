@@ -1,17 +1,17 @@
-FROM rust AS base
+FROM rust:buster AS base
 
 ENV USER=root
 ENV ROCKET_ADDRESS=0.0.0.0
-ENV ROCKET_ENV=dev
+ENV ROCKET_ENV=development
 
 WORKDIR /code
 RUN cargo init
 COPY Cargo.toml /code/Cargo.toml
 RUN cargo fetch
-COPY . /code/
+COPY . /code
 
-FROM base AS dev
+FROM base AS development
 
 EXPOSE 8000
 
-CMD [ "cargo", "run", "--offline" ]
+CMD [ "cargo", "run" ]

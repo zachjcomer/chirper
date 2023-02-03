@@ -1,4 +1,4 @@
-FROM node:lts AS dev
+FROM node:lts AS development
 
 ENV CI=true
 ENV PORT=3000
@@ -6,7 +6,7 @@ ENV PORT=3000
 WORKDIR /code
 COPY package.json /code/package.json
 COPY package-lock.json /code/package-lock.json
-RUN npm CI
+RUN npm ci
 COPY . /code
 
 CMD [ "npm", "start" ]
